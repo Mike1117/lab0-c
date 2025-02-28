@@ -4,6 +4,12 @@
 
 #include "queue.h"
 
+/* Notice: sometimes, Cppcheck would find the potential NULL pointer bugs,
+ * but some of them cannot occurr. You can suppress them by adding the
+ * following line.
+ *   cppcheck-suppress nullPointer
+ */
+
 /* Create an empty queue */
 struct list_head *q_new()
 {
@@ -20,10 +26,10 @@ void q_free(struct list_head *head)
 {
     if (!head)
         return;
-    element_t *cur, *safe;
+    element_t *curr, *safe;
     /* cppcheck-suppress unusedLabel */
-    list_for_each_entry_safe (cur, safe, head, list)
-        q_release_element(cur);
+    list_for_each_entry_safe (curr, safe, head, list)
+        q_release_element(curr);
     free(head);
 }
 
@@ -90,9 +96,9 @@ int q_size(struct list_head *head)
 {
     if (!head)
         return 0;
-    struct list_head *cur;
+    struct list_head *curr;
     int size = 0;
-    list_for_each (cur, head)
+    list_for_each (curr, head)
         size++;
     return size;
 }
@@ -119,7 +125,6 @@ bool q_delete_dup(struct list_head *head)
 {
     if (!head || list_empty(head))
         return false;
-
     // https://leetcode.com/problems/remove-duplicates-from-sorted-list-ii/
     return true;
 }
@@ -135,14 +140,14 @@ void q_reverse(struct list_head *head)
 {
     if (!head)
         return;
-    struct list_head *cur = head;
+    struct list_head *curr = head;
     struct list_head *tmp;
     do {
-        tmp = cur->next;
-        cur->next = cur->prev;
-        cur->prev = tmp;
-        cur = tmp;
-    } while (cur != head);
+        tmp = curr->next;
+        curr->next = curr->prev;
+        curr->prev = tmp;
+        curr = tmp;
+    } while (curr != head);
 }
 
 /* Reverse the nodes of the list k at a time */
