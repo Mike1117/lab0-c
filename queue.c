@@ -27,7 +27,6 @@ void q_free(struct list_head *head)
     if (!head)
         return;
     element_t *curr, *safe;
-    /* cppcheck-suppress unusedLabel */
     list_for_each_entry_safe (curr, safe, head, list)
         q_release_element(curr);
     free(head);
