@@ -111,7 +111,7 @@ bool q_delete_mid(struct list_head *head)
 {
     if (!head || list_empty(head))
         return false;
-    int index = q_size(head + 1) / 2;
+    int index = (q_size(head) + 1) / 2;
     int i = 0;
     for (i = 0; i < index; i++) {
         head = head->next;
