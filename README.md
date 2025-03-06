@@ -29,9 +29,9 @@ Some distros like Arch Linux won't install `aspell-en` with `aspell`, and you mu
 $ sudo pacman -S aspell-en
 ```
 
-Note: [Cppcheck](https://cppcheck.sourceforge.net/) version must be at least 1.90, otherwise
+Note: [Cppcheck](https://cppcheck.sourceforge.io/) version must be at least 1.90, otherwise
 it might report errors with false positives. You can get its version by executing `$ cppcheck --version`.
-Check [Developer Info](https://cppcheck.sourceforge.net/devinfo/) for building Cppcheck from source.
+Check [Developer Info](https://cppcheck.sourceforge.io/devinfo/) for building Cppcheck from source.
 
 ### Integrate `clang-format` to `vim`
 If you want to run `clang-format` automatically after saving with vim, 
@@ -111,6 +111,8 @@ Trace files
   * They are short and simple.
   * We encourage to study them to see what tests are being performed.
   * XX is the trace number (1-17).  CAT describes the general nature of the test.
+  * All functions that need to be implemented are explicitly listed.
+  * If a colon is present in the title, all functions mentioned afterwards must be correctly implemented for the test to pass.
 * `traces/trace-eg.cmd` : A simple, documented trace file to demonstrate the operation of `qtest`
 
 ## Debugging Facilities

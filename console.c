@@ -144,6 +144,8 @@ static char **parse_args(char *line, int *argcp)
             *dst++ = c;
         }
     }
+    /* Let the last substring is null-terminated */
+    *dst++ = '\0';
 
     /* Now assemble into array of strings */
     char **argv = calloc_or_fail(argc, sizeof(char *), "parse_args");
@@ -427,7 +429,7 @@ void init_cmd()
                 "Display or set options. See 'Options' section for details",
                 "[name val]");
     ADD_COMMAND(quit, "Exit program", "");
-    ADD_COMMAND(source, "Read commands from source file", "");
+    ADD_COMMAND(source, "Read commands from source file", "file");
     ADD_COMMAND(log, "Copy output to file", "file");
     ADD_COMMAND(time, "Time command execution", "cmd arg ...");
     ADD_COMMAND(web, "Read commands from builtin web server", "[port]");

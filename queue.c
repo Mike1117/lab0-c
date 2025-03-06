@@ -5,12 +5,6 @@
 
 #include "queue.h"
 
-/* Notice: sometimes, Cppcheck would find the potential NULL pointer bugs,
- * but some of them cannot occurr. You can suppress them by adding the
- * following line.
- *   cppcheck-suppress nullPointer
- */
-
 /* Create an empty queue */
 struct list_head *q_new()
 {
@@ -28,7 +22,7 @@ void q_free(struct list_head *head)
     if (!head)
         return;
     element_t *curr, *safe;
-    list_for_each_entry_safe (curr, safe, head, list)
+    list_for_each_entry_safe(curr, safe, head, list)
         q_release_element(curr);
     free(head);
 }
@@ -102,7 +96,7 @@ int q_size(struct list_head *head)
         return 0;
     struct list_head *curr;
     int size = 0;
-    list_for_each (curr, head)
+    list_for_each(curr, head)
         size++;
     return size;
 }
@@ -131,7 +125,7 @@ bool q_delete_dup(struct list_head *head)
         return false;
     element_t *curr, *safe;
     bool dup = false;
-    list_for_each_entry_safe (curr, safe, head, list) {
+    list_for_each_entry_safe(curr, safe, head, list) {
         if (curr->list.next != head && !strcmp(curr->value, safe->value)) {
             dup = true;
             list_del(&curr->list);
@@ -162,7 +156,7 @@ void q_swap(struct list_head *head)
     if (!head || list_empty(head))
         return;
     element_t *curr, *safe;
-    list_for_each_entry_safe (curr, safe, head, list) {
+    list_for_each_entry_safe(curr, safe, head, list) {
         if (&safe->list == head) {
             break;
         } else {
@@ -201,7 +195,7 @@ void q_reverseK(struct list_head *head, int k)
     while (safe != head) {
         curr_h = tmp_h->next;
         int i = 0;
-        list_for_each_safe (curr, safe, tmp_h) {
+        list_for_each_safe(curr, safe, tmp_h) {
             i++;
             if (i == k) {
                 curr->next = tmp_h;

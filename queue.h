@@ -81,7 +81,7 @@ bool q_insert_tail(struct list_head *head, char *s);
 /**
  * q_remove_head() - Remove the element from head of queue
  * @head: header of queue
- * @sp: string would be inserted
+ * @sp: output buffer where the removed string is copied
  * @bufsize: size of the string
  *
  * If sp is non-NULL and an element is removed, copy the removed string to *sp
@@ -101,7 +101,7 @@ element_t *q_remove_head(struct list_head *head, char *sp, size_t bufsize);
 /**
  * q_remove_tail() - Remove the element from tail of queue
  * @head: header of queue
- * @sp: string would be inserted
+ * @sp: output buffer where the removed string is copied
  * @bufsize: size of the string
  *
  * Return: the pointer to element, %NULL if queue is NULL or empty.
@@ -134,7 +134,7 @@ int q_size(struct list_head *head);
  *
  * The middle node of a linked list of size n is the
  * ⌊n / 2⌋th node from the start using 0-based indexing.
- * If there're six elements, the third member should be returned.
+ * If there're six elements, the third member should be deleted.
  *
  * Reference:
  * https://leetcode.com/problems/delete-the-middle-node-of-a-linked-list/
