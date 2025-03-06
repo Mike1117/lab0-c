@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -275,8 +276,93 @@ int q_descend(struct list_head *head)
 
 /* Merge all the queues into one sorted queue, which is in ascending/descending
  * order */
+struct list_head *merge_two_list(struct list_head *L1,
+                                 struct list_head *L2,
+                                 bool descend)
+{
+    struct list_head *head = L1, **ptr = &head->next, **node;
+    struct list_head *L2_head = L2;
+    struct list_head *prev = head;
+
+    if (!descend) {  // ascend
+        L1 = L1->next;
+        L2 = L2->next;
+        for (node = NULL; L1 != head && L2 != L2_head; *node = (*node)->next) {
+            node = (strcmp(list_entry(L1, element_t, list)->value,
+                           list_entry(L2, element_t, list)->value) < 0)
+                       ? &L1
+                       : &L2;
+            *ptr = *node;
+            (*ptr)->prev = prev;
+            prev = *ptr;
+            ptr = &(*ptr)->next;
+        }
+        *ptr = (L1 != head) ? L1 : L2;
+        (*ptr)->prev = prev;
+
+        while (*ptr && (*ptr) != head && (*ptr) != L2_head) {
+            ptr = &(*ptr)->next;
+        }
+
+        *ptr = head;
+        head->prev = list_entry(ptr, struct list_head, next);
+    } else {  // descend
+        L1 = L1->prev;
+        L2 = L2->prev;
+        for (node = NULL; L1 != head && L2 != L2_head;) {
+            printf("in_prev_L1:%s \n", list_entry(L1, element_t, list)->value);
+            printf("in_prev_L2:%s \n", list_entry(L2, element_t, list)->value);
+            node = (strcmp(list_entry(L1, element_t, list)->value,
+                           list_entry(L2, element_t, list)->value) > 0)
+                       ? &L1
+                       : &L2;
+            *ptr = *node;
+            *node = (*node)->prev;
+            (*ptr)->prev = prev;
+            prev = *ptr;
+            ptr = &(*ptr)->next;
+        }
+
+        *node = (L1 != head) ? L1 : L2;
+
+        while (*node && (*node)->prev && (*node) != head &&
+               (*node) != L2_head) {
+            *ptr = *node;
+            *node = (*node)->prev;
+            (*ptr)->prev = prev;
+            prev = *ptr;
+            ptr = &(*ptr)->next;
+        }
+
+        *ptr = head;
+        head->prev = list_entry(ptr, struct list_head, next);
+    }
+    INIT_LIST_HEAD(L2_head);
+    return head;
+}
 int q_merge(struct list_head *head, bool descend)
 {
+    if (!head || list_empty(head))
+        return 0;
+    if (list_is_singular(head))
+        return 1;
+
+    struct list_head *ptr_first = head->next;
+    struct list_head *ptr_i = head->next->next;
+    struct list_head *ptr_j = head->prev;
+    while (ptr_i != ptr_j) {
+        while (ptr_i != ptr_j && ptr_j->next != ptr_i) {
+            list_entry(ptr_i, queue_contex_t, chain)->q =
+                merge_two_list(list_entry(ptr_i, queue_contex_t, chain)->q,
+                               list_entry(ptr_j, queue_contex_t, chain)->q, 0);
+            ptr_i = ptr_i->next;
+            ptr_j = ptr_j->prev;
+        }
+        ptr_i = head->next->next;
+    }
+    list_entry(ptr_first, queue_contex_t, chain)->q =
+        merge_two_list(list_entry(ptr_first, queue_contex_t, chain)->q,
+                       list_entry(ptr_i, queue_contex_t, chain)->q, descend);
     // https://leetcode.com/problems/merge-k-sorted-lists/
-    return 0;
+    return q_size(list_entry(ptr_first, queue_contex_t, chain)->q);
 }
