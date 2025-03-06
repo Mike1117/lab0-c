@@ -276,9 +276,9 @@ int q_descend(struct list_head *head)
 
 /* Merge all the queues into one sorted queue, which is in ascending/descending
  * order */
-struct list_head *merge_two_list(struct list_head *L1,
-                                 struct list_head *L2,
-                                 bool descend)
+struct list_head *merge_two_queue(struct list_head *L1,
+                                  struct list_head *L2,
+                                  bool descend)
 {
     struct list_head *head = L1, **ptr = &head->next, **node;
     struct list_head *L2_head = L2;
@@ -353,16 +353,16 @@ int q_merge(struct list_head *head, bool descend)
     while (ptr_i != ptr_j) {
         while (ptr_i != ptr_j && ptr_j->next != ptr_i) {
             list_entry(ptr_i, queue_contex_t, chain)->q =
-                merge_two_list(list_entry(ptr_i, queue_contex_t, chain)->q,
-                               list_entry(ptr_j, queue_contex_t, chain)->q, 0);
+                merge_two_queue(list_entry(ptr_i, queue_contex_t, chain)->q,
+                                list_entry(ptr_j, queue_contex_t, chain)->q, 0);
             ptr_i = ptr_i->next;
             ptr_j = ptr_j->prev;
         }
         ptr_i = head->next->next;
     }
     list_entry(ptr_first, queue_contex_t, chain)->q =
-        merge_two_list(list_entry(ptr_first, queue_contex_t, chain)->q,
-                       list_entry(ptr_i, queue_contex_t, chain)->q, descend);
+        merge_two_queue(list_entry(ptr_first, queue_contex_t, chain)->q,
+                        list_entry(ptr_i, queue_contex_t, chain)->q, descend);
     // https://leetcode.com/problems/merge-k-sorted-lists/
     return q_size(list_entry(ptr_first, queue_contex_t, chain)->q);
 }
