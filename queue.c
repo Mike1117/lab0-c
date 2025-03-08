@@ -376,11 +376,13 @@ struct list_head *merge_two_sorted_queue(struct list_head *L1,
                                          bool descend)
 {
     struct list_head *head = L1, **ptr = &head->next, **node;
-    const struct list_head *L2_head = L2;
+    struct list_head *L2_head = L2;
     struct list_head *prev = head;
 
     if (!descend) {  // ascend
-        for (node = NULL; L1 != NULL && L2 != NULL; *node = (*node)->next) {
+        L1 = L1->next;
+        L2 = L2->next;
+        for (node = NULL; L1 != head && L2 != L2_head; *node = (*node)->next) {
             node = (strcmp(list_entry(L1, element_t, list)->value,
                            list_entry(L2, element_t, list)->value) < 0)
                        ? &L1
@@ -390,7 +392,7 @@ struct list_head *merge_two_sorted_queue(struct list_head *L1,
             prev = *ptr;
             ptr = &(*ptr)->next;
         }
-        *ptr = (L1) ? L1 : L2;
+        *ptr = (L1 != head) ? L1 : L2;
         (*ptr)->prev = prev;
 
         while (*ptr && (*ptr) != head && (*ptr) != L2_head) {
@@ -400,7 +402,9 @@ struct list_head *merge_two_sorted_queue(struct list_head *L1,
         *ptr = head;
         head->prev = list_entry(ptr, struct list_head, next);
     } else {  // descend
-        for (node = NULL; L1 != NULL && L2 != NULL;) {
+        L1 = L1->prev;
+        L2 = L2->prev;
+        for (node = NULL; L1 != head && L2 != L2_head;) {
             node = (strcmp(list_entry(L1, element_t, list)->value,
                            list_entry(L2, element_t, list)->value) > 0)
                        ? &L1
@@ -412,7 +416,7 @@ struct list_head *merge_two_sorted_queue(struct list_head *L1,
             ptr = &(*ptr)->next;
         }
 
-        *node = (L1) ? L1 : L2;
+        *node = (L1 != head) ? L1 : L2;
 
         while (*node && (*node)->prev && (*node) != head &&
                (*node) != L2_head) {
@@ -426,6 +430,7 @@ struct list_head *merge_two_sorted_queue(struct list_head *L1,
         *ptr = head;
         head->prev = list_entry(ptr, struct list_head, next);
     }
+    INIT_LIST_HEAD(L2_head);
     return head;
 }
 int q_merge(struct list_head *head, bool descend)
