@@ -230,18 +230,20 @@ struct list_head *merge_two_queue(struct list_head *L1,
         return L2;
     if (!L2)
         return L1;
-    struct list_head *head =
-        (strcmp(list_entry(L1, element_t, list)->value,
-                list_entry(L2, element_t, list)->value) < 0)
-            ? L1
-            : L2;
-    struct list_head **ptr = &head->next;
-    struct list_head **node = (head == L1) ? &L1 : &L2;
-    *node = (*node)->next;
-    struct list_head *L2_head = L2;
-    struct list_head *prev = head;
+    struct list_head *head = NULL;
+    struct list_head **ptr = NULL;
+    struct list_head **node = NULL;
+    struct list_head *prev = NULL;
 
     if (!descend) {  // ascend
+        head = (strcmp(list_entry(L1, element_t, list)->value,
+                       list_entry(L2, element_t, list)->value) <= 0)
+                   ? L1
+                   : L2;
+        ptr = &head->next;
+        node = (head == L1) ? &L1 : &L2;
+        *node = (*node)->next;
+        prev = head;
         // cppcheck-suppress knownConditionTrueFalse
         while (L1 && L2) {
             node = (strcmp(list_entry(L1, element_t, list)->value,
@@ -258,34 +260,29 @@ struct list_head *merge_two_queue(struct list_head *L1,
         *ptr = (L1) ? L1 : L2;
         (*ptr)->prev = prev;
     } else {  // descend
+        head = (strcmp(list_entry(L1, element_t, list)->value,
+                       list_entry(L2, element_t, list)->value) >= 0)
+                   ? L1
+                   : L2;
+        ptr = &head->next;
+        node = (head == L1) ? &L1 : &L2;
+        *node = (*node)->next;
+        prev = head;
         // cppcheck-suppress knownConditionTrueFalse
         while (L1 && L2) {
             node = (strcmp(list_entry(L1, element_t, list)->value,
-                           list_entry(L2, element_t, list)->value) > 0)
+                           list_entry(L2, element_t, list)->value) >= 0)
                        ? &L1
                        : &L2;
             *ptr = *node;
-            *node = (*node)->prev;
             (*ptr)->prev = prev;
             prev = *ptr;
             ptr = &(*ptr)->next;
             if (*node)
-                *node = (*node)->prev;
+                *node = (*node)->next;
         }
-
-        *node = (L1) ? L1 : L2;
-
-        while (*node && (*node)->prev && (*node) != head &&
-               (*node) != L2_head) {
-            *ptr = *node;
-            *node = (*node)->prev;
-            (*ptr)->prev = prev;
-            prev = *ptr;
-            ptr = &(*ptr)->next;
-        }
-
-        *ptr = head;
-        head->prev = list_entry(ptr, struct list_head, next);
+        *ptr = (L1) ? L1 : L2;
+        (*ptr)->prev = prev;
     }
     return head;
 }
@@ -295,6 +292,7 @@ struct list_head *merge_sort(struct list_head *head, bool descend)
         return head;
 
     struct list_head *slow = head;
+    slow->prev = NULL;
     for (const struct list_head *fast = slow->next; fast && fast->next;
          fast = fast->next->next)
         slow = slow->next;
