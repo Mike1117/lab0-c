@@ -328,16 +328,16 @@ int q_ascend(struct list_head *head)
     if (list_is_singular(head))
         return 1;
 
-    struct list_head *curr = head->prev;
+    struct list_head *curr = head->next;
     element_t *to_del;
-    while (curr->prev != head) {
+    while (curr->next != head) {
         if (strcmp(list_entry(curr, element_t, list)->value,
-                   list_entry(curr->prev, element_t, list)->value) > 0) {
-            to_del = list_entry(curr->prev, element_t, list);
+                   list_entry(curr->next, element_t, list)->value) > 0) {
+            to_del = list_entry(curr->next, element_t, list);
             list_del(&to_del->list);
             q_release_element(to_del);
         } else {
-            curr = curr->prev;
+            curr = curr->next;
         }
     }
     // https://leetcode.com/problems/remove-nodes-from-linked-list/
@@ -353,16 +353,16 @@ int q_descend(struct list_head *head)
     if (list_is_singular(head))
         return 1;
 
-    struct list_head *curr = head->next;
+    struct list_head *curr = head->prev;
     element_t *to_del;
-    while (curr->next != head) {
+    while (curr->prev != head) {
         if (strcmp(list_entry(curr, element_t, list)->value,
-                   list_entry(curr->next, element_t, list)->value) < 0) {
-            to_del = list_entry(curr->next, element_t, list);
+                   list_entry(curr->prev, element_t, list)->value) > 0) {
+            to_del = list_entry(curr->prev, element_t, list);
             list_del(&to_del->list);
             q_release_element(to_del);
         } else {
-            curr = curr->next;
+            curr = curr->prev;
         }
     }
     // https://leetcode.com/problems/remove-nodes-from-linked-list/
