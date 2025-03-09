@@ -64,12 +64,29 @@ static void differentiate(int64_t *exec_times,
         exec_times[i] = after_ticks[i] - before_ticks[i];
 }
 
-static void update_statistics(const int64_t *exec_times, uint8_t *classes)
+static int cmp(const int64_t *a, const int64_t *b)
 {
+    if (*a == *b)
+        return 0;
+    return (*a > *b) ? 1 : -1;
+}
+
+static void sort_exec_times(int64_t *exec_times)
+{
+    qsort(exec_times, N_MEASURES, sizeof(int64_t),
+          (int (*)(const void *, const void *)) cmp);
+}
+
+static void update_statistics(int64_t *exec_times, uint8_t *classes)
+{
+    sort_exec_times(exec_times);
+    int64_t lower_bound = exec_times[(size_t) (N_MEASURES * 0.10)];
+    int64_t upper_bound = exec_times[(size_t) (N_MEASURES * 0.85)];
     for (size_t i = 0; i < N_MEASURES; i++) {
         int64_t difference = exec_times[i];
         /* CPU cycle counter overflowed or dropped measurement */
-        if (difference <= 0)
+        if (difference < 0 || difference < lower_bound ||
+            difference > upper_bound)
             continue;
 
         /* do a t-test on the execution time */
