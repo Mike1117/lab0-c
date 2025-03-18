@@ -46,9 +46,6 @@
 /* Analyze all literal strings instead of print statements */
 #define OPT_PARSE_STRINGS (0x00000040)
 
-#define FLOAT_TINY (0.0000001)
-#define FLOAT_CMP(a, b) (fabs(a - b) < FLOAT_TINY)
-
 #define PARSER_OK (0)
 #define PARSER_COMMENT_FOUND (1)
 #define PARSER_EOF (256)
@@ -359,7 +356,6 @@ static inline bool find_word(const char *restrict word,
 
 static inline int read_dictionary(const char *dictfile)
 {
-    char *ptr, *dict;
     struct stat buf;
     char buffer[4096];
     const char *buffer_end = buffer + (sizeof(buffer)) - 1;
@@ -372,6 +368,7 @@ static inline int read_dictionary(const char *dictfile)
         return -1;
     }
 
+    const char *ptr, *dict;
     ptr = dict =
         mmap(NULL, buf.st_size, PROT_READ, MAP_SHARED | MAP_POPULATE, fd, 0);
     if (dict == MAP_FAILED) {
@@ -393,7 +390,7 @@ static inline int read_dictionary(const char *dictfile)
         add_word(buffer, word_nodes, word_node_heap, &word_node_heap_next,
                  WORD_NODES_HEAP_SIZE);
     }
-    munmap(dict, buf.st_size);
+    munmap((void *) dict, buf.st_size);
     close(fd);
 
     return 0;
@@ -444,17 +441,6 @@ static void check_words(token_t *token)
         p1 = p2 + 1;
     }
     return;
-}
-
-/* Retrieve the current time as a double. */
-static double gettime_to_double(void)
-{
-    struct timeval tv;
-
-    if (UNLIKELY(gettimeofday(&tv, NULL) < 0))
-        return 0.0;
-
-    return (double) tv.tv_sec + ((double) tv.tv_usec / 1000000);
 }
 
 /* Set up a new parser instance. */
@@ -656,11 +642,9 @@ static get_char_t parse_number(parser_t *restrict p,
 
     /* Determine the integer format based on its prefix. */
     if (LIKELY(ch == '0')) {
-        get_char_t nextch1, nextch2;
-
         token_append(t, ch);
 
-        nextch1 = get_char(p);
+        get_char_t nextch1 = get_char(p);
 
         if (nextch1 >= '0' && nextch1 <= '8') {
             /* Treat as an octal value */
@@ -668,7 +652,7 @@ static get_char_t parse_number(parser_t *restrict p,
             isoct = true;
         } else if (nextch1 == 'x' || nextch1 == 'X') {
             /* Check for hexadecimal notation */
-            nextch2 = get_char(p);
+            get_char_t nextch2 = get_char(p);
 
             if (LIKELY(nextch2 != PARSER_EOF)) {
                 /* If not EOF, revert state and finish token */
@@ -1605,7 +1589,6 @@ static void set_is_not_identifier(void)
 int main(int argc, char **argv)
 {
     token_t t, line, str;
-    double t1, t2;
     static char buffer[65536];
 
     token_cat = token_cat_normal;
@@ -1643,7 +1626,6 @@ int main(int argc, char **argv)
     fflush(stdout);
     setvbuf(stdout, buffer, _IOFBF, sizeof(buffer));
 
-    t1 = gettime_to_double();
     if (argc == optind) {
         parse_path(".", &t, &line, &str);
         optind++;
@@ -1653,7 +1635,6 @@ int main(int argc, char **argv)
             optind++;
         }
     }
-    t2 = gettime_to_double();
 
     token_free(&str);
     token_free(&line);
@@ -1661,27 +1642,16 @@ int main(int argc, char **argv)
 
     dump_bad_spellings();
 
-    printf("%" PRIu32 " files scanned\n", files);
     printf("%" PRIu32
            " lines scanned (%.3f"
            "M bytes)\n",
            lines, (float) bytes_total / (float) (1024 * 1024));
-    if (words) {
-        size_t nodes = word_node_heap_next - word_node_heap;
-        printf("%" PRIu32 " words and %zd nodes in dictionary heap\n", words,
-               nodes);
-        printf("%" PRIu32 " chars mapped to %zd bytes of heap, ratio=1:%.2f\n",
-               dict_size, nodes * sizeof(word_node_t),
-               (float) nodes * sizeof(word_node_t) / dict_size);
-    }
     printf("%zu printf style statements being processed\n",
            SIZEOF_ARRAY(printfs));
     if (bad_spellings)
         printf("%" PRIu32 " unique bad spellings found (%" PRIu32
                " non-unique)\n",
                bad_spellings, bad_spellings_total);
-    printf("scanned %.2f lines per second\n",
-           FLOAT_CMP(t1, t2) ? 0.0 : (double) lines / (t2 - t1));
 
     fflush(stdout);
 
