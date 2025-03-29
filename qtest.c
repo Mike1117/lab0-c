@@ -75,6 +75,9 @@ static int string_length = MAXSTRING;
 
 static int descend = 0;
 
+static int prng_mode = 0;
+static uint32_t seed = 2463534242UL;
+
 #define MIN_RANDSTR_LEN 5
 #define MAX_RANDSTR_LEN 10
 static const char charset[] = "abcdefghijklmnopqrstuvwxyz";
@@ -166,18 +169,53 @@ static bool do_new(int argc, char *argv[])
 /* TODO: Add a buf_size check of if the buf_size may be less
  * than MIN_RANDSTR_LEN.
  */
+static uint32_t xorshift(uint32_t *seed)
+{
+    uint32_t x = *seed;
+    x ^= x << 13;
+    x ^= x >> 17;
+    x ^= x << 5;
+    *seed = x;
+    return x;
+}
+
 static void fill_rand_string(char *buf, size_t buf_size)
 {
-    size_t len = 0;
-    while (len < MIN_RANDSTR_LEN)
-        len = rand() % buf_size;
+    if (prng_mode == 0) {
+        size_t len = 0;
+        while (len < MIN_RANDSTR_LEN)
+            len = rand() % buf_size;
 
-    uint64_t randstr_buf_64[MAX_RANDSTR_LEN] = {0};
-    randombytes((uint8_t *) randstr_buf_64, len * sizeof(uint64_t));
-    for (size_t n = 0; n < len; n++)
-        buf[n] = charset[randstr_buf_64[n] % (sizeof(charset) - 1)];
+        uint64_t randstr_buf_64[MAX_RANDSTR_LEN] = {0};
+        randombytes((uint8_t *) randstr_buf_64, len * sizeof(uint64_t));
+        for (size_t n = 0; n < len; n++)
+            buf[n] = charset[randstr_buf_64[n] % (sizeof(charset) - 1)];
 
-    buf[len] = '\0';
+        buf[len] = '\0';
+    } else {
+        size_t charset_len = strlen(charset);
+        uint32_t charset_limit = (UINT32_MAX / charset_len) * charset_len;
+
+        size_t min_len = MIN_RANDSTR_LEN;
+        size_t max_len = buf_size - 1;
+        uint32_t len_range = max_len - min_len + 1;
+        uint32_t len_limit = (UINT32_MAX / len_range) * len_range;
+
+        uint32_t r;
+        do {
+            r = xorshift(&seed);
+        } while (r >= len_limit);
+        size_t len = min_len + (r % len_range);
+
+        for (size_t i = 0; i < len; i++) {
+            do {
+                r = xorshift(&seed);
+            } while (r >= charset_limit);
+            buf[i] = charset[r % charset_len];
+        }
+
+        buf[len] = '\0';
+    }
 }
 
 /* insertion */
@@ -1114,6 +1152,31 @@ static bool do_shuffle(int argc, char *argv[])
     return !error_check();
 }
 
+static bool do_switchPRNG(int argc, char *argv[])
+{
+    int mode = 0;
+    if (argc == 2) {
+        if (!get_int(argv[1], &mode) || mode > 1) {
+            report(1, "Invalid number of mode (0 or 1)");
+            return false;
+        }
+    } else {
+        report(1,
+               "Invalid number of arguments for switch pseudo random number "
+               "generator");
+        return false;
+    }
+
+    if (mode == 0) {
+        prng_mode = 0;
+    } else {
+        prng_mode = 1;
+    }
+
+
+    return !error_check();
+}
+
 static void console_init()
 {
     ADD_COMMAND(new, "Create new queue", "");
@@ -1155,6 +1218,8 @@ static void console_init()
     ADD_COMMAND(reverseK, "Reverse the nodes of the queue 'K' at a time",
                 "[K]");
     ADD_COMMAND(shuffle, "Shuffle queue", "");
+    ADD_COMMAND(switchPRNG,
+                "Switch the mode of pseudo random number generator.", "");
     add_param("length", &string_length, "Maximum length of displayed string",
               NULL);
     add_param("malloc", &fail_probability, "Malloc failure probability percent",
