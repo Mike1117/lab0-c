@@ -208,7 +208,6 @@ static bool doit(int mode)
     uint8_t *classes = calloc(N_MEASURES, sizeof(uint8_t));
     uint8_t *input_data = calloc(N_MEASURES * CHUNK_SIZE, sizeof(uint8_t));
 
-
     if (!before_ticks || !after_ticks || !exec_times || !classes ||
         !input_data) {
         die();
@@ -219,13 +218,10 @@ static bool doit(int mode)
     bool ret = measure(before_ticks, after_ticks, input_data, mode);
     differentiate(exec_times, before_ticks, after_ticks);
 
-    bool first_time = percentiles[NUMBER_PERCENTILES - 1] == 0;
-    if (first_time) {
-        prepare_percentiles(exec_times);
-    } else {
-        update_statistics(exec_times, classes);
-        ret &= report();
-    }
+    prepare_percentiles(exec_times);
+    update_statistics(exec_times, classes);
+    ret &= report();
+
 
     free(before_ticks);
     free(after_ticks);
