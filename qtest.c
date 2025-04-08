@@ -1108,8 +1108,6 @@ void q_shuffle(struct list_head *head)
 {
     if (!head || list_empty(head) || list_is_singular(head))
         return;
-
-    srand(time(NULL));
     struct list_head *curr = head->prev;
     struct list_head *swp;
     int size = q_size(head);
@@ -1495,6 +1493,7 @@ int main(int argc, char *argv[])
     if (!sanity_check())
         return -1;
 
+    srand(time(NULL));
     /* To hold input file name */
     char buf[BUFSIZE];
     char *infile_name = NULL;
